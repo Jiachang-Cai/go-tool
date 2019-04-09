@@ -6,11 +6,11 @@ import (
 )
 
 // 私钥
-const secretKey = "8b489108c2aacce6db991e4cf625b9c7"
+const secretKey = "0gGAfdaxAgQoYJPG"
 
 // 生成签名
 func TestMakeSign(t *testing.T) {
-	data := map[string]string{
+	data := map[string]interface{}{
 		"name":  "zhang",
 		"color": "red",
 	}
@@ -20,16 +20,16 @@ func TestMakeSign(t *testing.T) {
 
 // 验证签名
 func TestVerifySign(t *testing.T) {
-	datas := []map[string]string{
+	datas := []map[string]interface{}{
 		{"name": "zhang",
 			"color": "red",
-			"sign": "09326c3a2d8c447f3f1d6bca04c10ce1"},
+			"sign": "4ea8e4c4f6d518b0b03174771f63a84e"},
 		{"name": "zhang",
 			"color": "red",
 		},
 		{"name": "zhang",
 			"color_change": "red",
-			"sign": "09326c3a2d8c447f3f1d6bca04c10ce1"},
+			"sign": "4ea8e4c4f6d518b0b03174771f63a84e"},
 	}
 	for _, data := range datas {
 		if err := VerifySign(data, secretKey); err != nil {

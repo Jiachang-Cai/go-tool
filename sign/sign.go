@@ -1,11 +1,12 @@
 package sign
 
 import (
+	"crypto/md5"
+	"errors"
+	"fmt"
 	"sort"
 	"strings"
-	"crypto/md5"
-	"fmt"
-	"errors"
+	"strconv"
 )
 
 type kvPair struct {
@@ -15,7 +16,7 @@ type kvPair struct {
 type kvPairs []kvPair
 
 func (t kvPairs) Sort() {
-	sort.Slice(t, func(i, j int) bool {
+	sort.SliceStable(t, func(i, j int) bool {
 		return t[i].k < t[j].k
 	})
 }
@@ -29,27 +30,42 @@ func (t kvPairs) Join() string {
 }
 
 // 生成sign
-func MakeSign(data map[string]string, secretKey string) {
+func MakeSign(data map[string]interface{}, secretKey string) {
 	p := kvPairs{}
 	// 剔除空值 和 sign
 	for k, v := range data {
+		v := typeSwitcher(v)
 		if !(v == "" || k == "sign") {
 			p = append(p, kvPair{k, v})
 		}
 	}
 	p.Sort()
+	fmt.Println(p.Join())
 	data["sign"] = md5Sign(p.Join(), secretKey)
 
 }
+func typeSwitcher(t interface{}) string {
+	switch v := t.(type) {
+	case int:
+		return strconv.Itoa(v)
+	case string:
+		return v
+	case int64:
+		return strconv.Itoa(int(v))
+	default:
+		return ""
+	}
+}
 
 // 验证sign
-func VerifySign(data map[string]string, secretKey string) error {
+func VerifySign(data map[string]interface{}, secretKey string) error {
 	p := kvPairs{}
 	sign, ok := data["sign"]
 	if !ok {
 		return errors.New("sign not exist")
 	}
 	for k, v := range data {
+		v := typeSwitcher(v)
 		if !(v == "" || k == "sign") {
 			p = append(p, kvPair{k, v})
 		}
@@ -65,6 +81,6 @@ func VerifySign(data map[string]string, secretKey string) error {
 func md5Sign(str, key string) string {
 	h := md5.New()
 	h.Write([]byte(str))
-	h.Write([]byte(key))
+	h.Write([]byte("&" + key))
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
